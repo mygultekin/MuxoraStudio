@@ -36,6 +36,142 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 a { text-decoration: none; color: inherit; }
 img { max-width: 100%; display: block; }
 
+/* ===== AUTH CALLBACK OVERLAY ===== */
+.auth-callback-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+        radial-gradient(circle at top left, rgba(16,185,129,0.12), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(59,130,246,0.12), transparent 35%),
+        linear-gradient(180deg, #05050f 0%, #0a0a1a 100%);
+}
+.auth-callback-overlay.active { display: flex; }
+.auth-card {
+    width: min(100%, 560px);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 28px;
+    padding: 32px 28px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+    backdrop-filter: blur(18px);
+}
+.auth-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--emerald);
+    margin-bottom: 16px;
+}
+.auth-eyebrow-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--emerald);
+    box-shadow: 0 0 16px rgba(16,185,129,0.5);
+}
+.auth-title {
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    font-weight: 900;
+    margin-bottom: 12px;
+}
+.auth-desc {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.75;
+    margin-bottom: 20px;
+}
+.auth-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 18px;
+}
+.auth-status-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.auth-status.pending .auth-status-icon {
+    background: rgba(59,130,246,0.14);
+    border: 1px solid rgba(59,130,246,0.25);
+}
+.auth-status.success .auth-status-icon {
+    background: rgba(16,185,129,0.14);
+    border: 1px solid rgba(16,185,129,0.25);
+}
+.auth-status.error .auth-status-icon {
+    background: rgba(239,68,68,0.14);
+    border: 1px solid rgba(239,68,68,0.25);
+}
+.auth-status-title {
+    font-size: 0.98rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+.auth-status-copy {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.65;
+}
+.auth-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+.auth-btn {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0.9rem 1.4rem;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+}
+.auth-btn:hover { transform: translateY(-1px); }
+.auth-btn-primary {
+    background: linear-gradient(135deg, var(--emerald), var(--blue));
+    color: #fff;
+}
+.auth-btn-secondary {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+}
+.auth-meta {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.65;
+}
+
 /* ===== UTILITY ===== */
 .text-gradient { background: linear-gradient(135deg, var(--emerald), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .text-gradient-blue { background: linear-gradient(135deg, var(--blue), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
@@ -393,6 +529,30 @@ img { max-width: 100%; display: block; }
     </style>
 </head>
 <body>
+
+<div class="auth-callback-overlay" id="authCallbackOverlay">
+    <div class="auth-card">
+        <div class="auth-eyebrow">
+            <span class="auth-eyebrow-dot"></span>
+            Muxora Auth
+        </div>
+        <h1 class="auth-title" id="authTitle">Checking your link...</h1>
+        <p class="auth-desc" id="authDesc">We are validating your secure link and preparing the next step.</p>
+
+        <div class="auth-status pending" id="authStatus">
+            <div class="auth-status-icon" id="authStatusIcon">⏳</div>
+            <div>
+                <div class="auth-status-title" id="authStatusTitle">Please wait</div>
+                <div class="auth-status-copy" id="authStatusCopy">Your request is being processed.</div>
+            </div>
+        </div>
+
+        <div class="auth-actions" id="authActions"></div>
+        <div class="auth-meta" id="authMeta">
+            If you opened this on desktop, we can complete email confirmation here. For app-only actions like password reset, continue in WordMatch on your phone.
+        </div>
+    </div>
+</div>
 
 <!-- Navigation -->
 <nav class="nav" id="nav">
@@ -1092,6 +1252,160 @@ img { max-width: 100%; display: block; }
 </footer>
 
 <script>
+const AUTH_CALLBACK_CONFIG = {
+    supabaseFunctionUrl: 'https://blhziadcejeakaipaxet.supabase.co/functions/v1/auth-verify-link',
+    supabaseAnonKey: 'sb_publishable_PHqLN33WF0S2eSyu5f4Wjw_nhEOs_xf',
+    appScheme: 'wordmatch://auth/callback',
+    websiteUrl: 'https://muxorastudio.com/',
+};
+
+const authOverlay = document.getElementById('authCallbackOverlay');
+const authTitle = document.getElementById('authTitle');
+const authDesc = document.getElementById('authDesc');
+const authStatus = document.getElementById('authStatus');
+const authStatusIcon = document.getElementById('authStatusIcon');
+const authStatusTitle = document.getElementById('authStatusTitle');
+const authStatusCopy = document.getElementById('authStatusCopy');
+const authActions = document.getElementById('authActions');
+const authMeta = document.getElementById('authMeta');
+
+function isMobileDevice() {
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+function setAuthState(state, title, copy) {
+    authStatus.className = `auth-status ${state}`;
+    authStatusTitle.textContent = title;
+    authStatusCopy.textContent = copy;
+    authStatusIcon.textContent = state === 'success' ? '✓' : state === 'error' ? '!' : '⏳';
+}
+
+function setAuthActions(actions) {
+    authActions.innerHTML = '';
+    actions.forEach(action => {
+        const node = document.createElement(action.href ? 'a' : 'button');
+        node.className = `auth-btn ${action.variant === 'secondary' ? 'auth-btn-secondary' : 'auth-btn-primary'}`;
+        node.textContent = action.label;
+        if (action.href) {
+            node.href = action.href;
+        } else if (action.onClick) {
+            node.type = 'button';
+            node.addEventListener('click', action.onClick);
+        }
+        authActions.appendChild(node);
+    });
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard?.writeText) {
+        return navigator.clipboard.writeText(text);
+    }
+    const input = document.createElement('textarea');
+    input.value = text;
+    input.setAttribute('readonly', '');
+    input.style.position = 'absolute';
+    input.style.left = '-9999px';
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    return Promise.resolve();
+}
+
+async function verifyAuthToken(tokenHash, type) {
+    const response = await fetch(AUTH_CALLBACK_CONFIG.supabaseFunctionUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            apikey: AUTH_CALLBACK_CONFIG.supabaseAnonKey,
+            Authorization: `Bearer ${AUTH_CALLBACK_CONFIG.supabaseAnonKey}`,
+        },
+        body: JSON.stringify({ tokenHash, type }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(data.error || `Verification failed (${response.status})`);
+    }
+    return data;
+}
+
+async function runAuthCallbackIfNeeded() {
+    const params = new URLSearchParams(window.location.search);
+    const tokenHash = params.get('token_hash');
+    const type = params.get('type');
+    if (!tokenHash || !type) return false;
+
+    authOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    const deepLink = `${AUTH_CALLBACK_CONFIG.appScheme}?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(type)}`;
+
+    if (isMobileDevice()) {
+        authTitle.textContent = type === 'recovery' ? 'Open WordMatch to reset your password' : 'Open WordMatch to continue';
+        authDesc.textContent = 'You are on a mobile device. We will try to open the app and continue securely there.';
+        setAuthState('pending', 'Opening the app', 'If nothing happens, use the button below.');
+        setAuthActions([
+            { label: 'Open WordMatch', href: deepLink, variant: 'primary' },
+            { label: 'Stay on Web', variant: 'secondary', onClick: async () => {
+                if (type === 'recovery') {
+                    setAuthState('error', 'Password reset must continue in the app', 'Please open WordMatch on your phone to finish resetting your password.');
+                    return;
+                }
+                try {
+                    setAuthState('pending', 'Verifying email', 'Please wait while we confirm your email.');
+                    await verifyAuthToken(tokenHash, type);
+                    setAuthState('success', 'Email confirmed', 'Your email address has been verified successfully. You can now sign in from the app.');
+                    setAuthActions([{ label: 'Open WordMatch', href: 'wordmatch://', variant: 'primary' }]);
+                } catch (error) {
+                    setAuthState('error', 'Verification failed', error.message || 'The link may be expired or already used.');
+                    setAuthActions([{ label: 'Open WordMatch', href: 'wordmatch://', variant: 'primary' }]);
+                }
+            }},
+        ]);
+        authMeta.textContent = 'Best experience: use the Open WordMatch button. On mobile, password reset should continue inside the app.';
+        setTimeout(() => { window.location.href = deepLink; }, 500);
+        return true;
+    }
+
+    if (type === 'recovery') {
+        authTitle.textContent = 'Continue password reset in WordMatch';
+        authDesc.textContent = 'Password reset is an app-only action right now. Open WordMatch on your phone to continue.';
+        setAuthState('pending', 'App required', 'This recovery link is valid, but the password reset flow continues inside the mobile app.');
+        setAuthActions([
+            { label: 'Open WordMatch', href: deepLink, variant: 'primary' },
+            { label: 'Copy App Link', variant: 'secondary', onClick: async () => {
+                await copyToClipboard(deepLink);
+                setAuthState('success', 'App link copied', 'The secure WordMatch link has been copied. Open it on your phone to continue resetting your password.');
+            }},
+        ]);
+        authMeta.textContent = 'If you are on desktop, send this link to your phone and continue inside the app.';
+        return true;
+    }
+
+    authTitle.textContent = 'Confirming your email';
+    authDesc.textContent = 'You opened the link on desktop, so we can complete signup verification here.';
+    setAuthState('pending', 'Verifying', 'Please wait while we validate your secure token.');
+
+    try {
+        await verifyAuthToken(tokenHash, type);
+        setAuthState('success', 'Email confirmed', 'Your email has been verified. You can now sign in from WordMatch on your phone.');
+        setAuthActions([
+            { label: 'Open WordMatch', href: 'wordmatch://', variant: 'primary' },
+            { label: 'Back to Website', href: AUTH_CALLBACK_CONFIG.websiteUrl, variant: 'secondary' },
+        ]);
+        authMeta.textContent = 'Verification is complete. Return to the app and sign in with your email and password.';
+    } catch (error) {
+        setAuthState('error', 'Verification failed', error.message || 'The verification link may be invalid, expired, or already used.');
+        setAuthActions([{ label: 'Back to Website', href: AUTH_CALLBACK_CONFIG.websiteUrl, variant: 'secondary' }]);
+        authMeta.textContent = 'If this link was already used, try signing in from the app or request a new verification email.';
+    }
+
+    return true;
+}
+
+runAuthCallbackIfNeeded().then((authMode) => {
+if (authMode) return;
+
 gsap.registerPlugin(ScrollTrigger);
 
 // ===== NAV =====
@@ -1362,6 +1676,7 @@ let resizeTimer;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 250);
+});
 });
 </script>
 </body>
